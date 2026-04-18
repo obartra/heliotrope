@@ -7,6 +7,12 @@ settings:
 importers:
   .:
     devDependencies:
+      '@firebase/rules-unit-testing':
+        specifier: ^5.0.0
+        version: 5.0.0(firebase@11.10.0)
+      '@types/node':
+        specifier: ^20.17.0
+        version: 20.19.39
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.18.0
         version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
@@ -25,6 +31,9 @@ importers:
       eslint-plugin-import:
         specifier: ^2.31.0
         version: 2.32.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)
+      firebase:
+        specifier: ^11.0.0
+        version: 11.10.0
       firebase-tools:
         specifier: ^13.29.0
         version: 13.35.1(@types/node@20.19.39)
@@ -1168,6 +1177,15 @@ packages:
       }
     peerDependencies:
       '@firebase/app': 0.x
+
+  '@firebase/rules-unit-testing@5.0.0':
+    resolution:
+      {
+        integrity: sha512-C6+d3Msgjnqay2ml663ChvKYoD8VsQ+TIa0e+fGq0LFC0CKSPlacT1EVGL/ryo6Rc+wFs7Fpqz3fRlYdUEa2bA==,
+      }
+    engines: { node: '>=20.0.0' }
+    peerDependencies:
+      firebase: ^12.0.0
 
   '@firebase/storage-compat@0.3.24':
     resolution:
@@ -9793,6 +9811,10 @@ snapshots:
       '@firebase/logger': 0.4.4
       '@firebase/util': 1.12.1
       tslib: 2.8.1
+
+  '@firebase/rules-unit-testing@5.0.0(firebase@11.10.0)':
+    dependencies:
+      firebase: 11.10.0
 
   '@firebase/storage-compat@0.3.24(@firebase/app-compat@0.4.2)(@firebase/app-types@0.9.3)(@firebase/app@0.13.2)':
     dependencies:

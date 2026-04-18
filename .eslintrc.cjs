@@ -25,6 +25,12 @@ module.exports = {
   },
   overrides: [
     {
+      files: ['*.test.ts'],
+      parserOptions: {
+        project: './tsconfig.test.json',
+      },
+    },
+    {
       files: ['apps/web/**/*.{ts,tsx}'],
       extends: ['plugin:react/recommended', 'plugin:react-hooks/recommended'],
       plugins: ['react', 'react-hooks'],
