@@ -3,7 +3,7 @@
 const EMULATOR_FIRESTORE = 'http://127.0.0.1:8080';
 const EMULATOR_STORAGE = 'http://127.0.0.1:9199';
 
-const PROJECT_ID = 'heliotrope-85736';
+const PROJECT_ID = (Cypress.env('FIREBASE_PROJECT_ID') as string) || 'demo-heliotrope';
 const STORAGE_BUCKET = `${PROJECT_ID}.appspot.com`;
 
 const TEST_EMAIL = 'imagetest@example.com';

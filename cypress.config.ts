@@ -1,10 +1,19 @@
+import { readFileSync } from 'fs';
 import { defineConfig } from 'cypress';
+
+function readProjectId(): string {
+  const rc = JSON.parse(readFileSync('.firebaserc', 'utf-8')) as { projects: { default: string } };
+  return rc.projects.default;
+}
 
 export default defineConfig({
   e2e: {
     baseUrl: 'http://localhost:5173',
     supportFile: 'cypress/support/e2e.ts',
     specPattern: 'cypress/e2e/**/*.cy.ts',
+    env: {
+      FIREBASE_PROJECT_ID: readProjectId(),
+    },
     setupNodeEvents(on) {
       on('task', {
         async createFirebaseUser({

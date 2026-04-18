@@ -3,12 +3,14 @@ import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 import { connectStorageEmulator, getStorage } from 'firebase/storage';
 
+const projectId = (import.meta.env.VITE_FIREBASE_PROJECT_ID as string) ?? 'demo-heliotrope';
+
 const firebaseConfig: Record<string, string> = {
   apiKey: (import.meta.env.VITE_FIREBASE_API_KEY as string) ?? 'fake-api-key',
   authDomain: (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string) ?? 'localhost',
-  projectId: (import.meta.env.VITE_FIREBASE_PROJECT_ID as string) ?? 'heliotrope-85736',
+  projectId,
   storageBucket:
-    (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string) ?? 'heliotrope-85736.appspot.com',
+    (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string) ?? `${projectId}.appspot.com`,
 };
 
 const app = initializeApp(firebaseConfig);
