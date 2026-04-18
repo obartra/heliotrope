@@ -1,4 +1,7 @@
 {
   "buildScriptName": "build-storybook",
-  "projectId": ""
+  "projectId": "",
+  "autoAcceptChanges": "main",
+  "onlyChanged": true,
+  "externals": ["public/**"]
 }
