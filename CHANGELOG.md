@@ -1,5 +1,15 @@
 # Changelog
 
+## Milestone 5: Storybook + Chromatic baseline
+
+- Installed `chromatic` for visual regression testing on PRs
+- Installed `@storybook/test` for interactive story play functions
+- Enhanced SignIn stories: Default, SignUpMode (with play function toggling mode), FilledForm (with play function filling inputs)
+- Updated CI workflow (`ci.yml`) with Chromatic publish step using `chromaui/action`, blocking merge on unreviewed visual changes
+- Configured `chromatic.config.json` with `autoAcceptChanges` on main, `onlyChanged` for faster builds
+- Storybook a11y addon verified working (configured in Milestone 1)
+- All existing checks pass: typecheck, lint, 366 tests, Storybook build
+
 ## Milestone 4: Resolver + condition matchers
 
 - `resolveImage` pure function in `apps/functions/src/resolver/index.ts` implementing the 4-step cascade: override, priority-sorted rules, default image, no-image fallback
