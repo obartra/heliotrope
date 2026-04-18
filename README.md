@@ -1,5 +1,7 @@
 # Heliotrope
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/9bfcd71f-fa34-4e0b-8a7c-f733b9bc13ef/deploy-status)](https://app.netlify.com/projects/heliotropy/deploys)
+
 A cloud-hosted tool that automatically rotates your Slack profile photo based on user-configurable rules. Rules combine an image with conditions (date, time, location, weather, etc.) that all must match. All rules and images are editable through the web UI.
 
 The name refers to the flower that turns to face the sun. This one turns to face context.
