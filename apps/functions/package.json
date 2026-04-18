@@ -12,8 +12,7 @@
     "firebase-admin": "^13.0.0",
     "firebase-functions": "^6.1.0",
     "zod": "^3.24.0",
-    "suncalc": "^1.9.0",
-    "@heliotrope/schema": "workspace:*"
+    "suncalc": "^1.9.0"
   },
   "devDependencies": {
     "@types/node": "^20.17.0",

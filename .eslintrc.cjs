@@ -31,6 +31,12 @@ module.exports = {
       },
     },
     {
+      files: ['apps/functions/src/**/*.test.ts'],
+      parserOptions: {
+        project: './apps/functions/tsconfig.json',
+      },
+    },
+    {
       files: ['apps/web/**/*.{ts,tsx}'],
       extends: ['plugin:react/recommended', 'plugin:react-hooks/recommended'],
       plugins: ['react', 'react-hooks'],
