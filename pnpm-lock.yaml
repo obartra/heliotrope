@@ -55,9 +55,6 @@ importers:
 
   apps/functions:
     dependencies:
-      '@heliotrope/schema':
-        specifier: workspace:*
-        version: link:../../packages/schema
       firebase-admin:
         specifier: ^13.0.0
         version: 13.8.0
