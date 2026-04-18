@@ -1,6 +1,6 @@
 [build]
-  command = "cd ../.. && pnpm build"
-  publish = "dist"
+  command = "pnpm build"
+  publish = "apps/web/dist"
 
 [[redirects]]
   from = "/*"
