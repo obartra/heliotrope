@@ -1,0 +1,19 @@
+{
+  "rules": [
+    {
+      "name": "New Year",
+      "priority": 1000,
+      "image": "newyears.png",
+      "conditions": [
+        { "type": "date", "monthDay": "01-01", "windowDaysBefore": 1, "windowDaysAfter": 1 }
+      ]
+    },
+    {
+      "name": "SF office",
+      "priority": 900,
+      "image": "office.png",
+      "conditions": [{ "type": "geofenceCircle", "center": [0.0, 0.0], "radiusMeters": 200 }]
+    }
+  ],
+  "_comment": "Replace placeholder coordinates with real values. This file is tracked by git. Copy to rules.seed.json (gitignored) with actual data."
+}
