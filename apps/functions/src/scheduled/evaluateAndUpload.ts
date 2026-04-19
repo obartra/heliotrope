@@ -111,9 +111,21 @@ export async function evaluateAndUpload(uid: string, encryptionKey: string): Pro
     };
   }
 
-  // Download image bytes
+  // Read image doc to check for a Slack variant
+  const imageDocSnap = await db.doc(`users/${uid}/images/${result.chosenImageId}`).get();
+  const imageData = imageDocSnap.data() as
+    | {
+        variants?: Record<string, { storagePath: string; contentType?: string }>;
+      }
+    | undefined;
+
+  const slackVariant = imageData?.variants?.slack;
+  const imagePath = slackVariant?.storagePath ?? `users/${uid}/avatars/${result.chosenImageId}.png`;
+  const uploadContentType = slackVariant ? (slackVariant.contentType ?? 'image/jpeg') : 'image/png';
+
+  // Download image bytes (variant if available, canonical as fallback)
   const storageBucket = getStorage().bucket();
-  const file = storageBucket.file(`users/${uid}/avatars/${result.chosenImageId}.png`);
+  const file = storageBucket.file(imagePath);
   let imageBytes: Buffer;
   try {
     const [contents] = await file.download();
@@ -183,7 +195,7 @@ export async function evaluateAndUpload(uid: string, encryptionKey: string): Pro
   const slackToken = decryptToken(tokenCipher, encryptionKey);
 
   // Upload to Slack
-  const uploadResult = await uploadAvatar(slackToken, imageBytes, 'image/png');
+  const uploadResult = await uploadAvatar(slackToken, imageBytes, uploadContentType);
 
   if (uploadResult.ok) {
     await Promise.all([

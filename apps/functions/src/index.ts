@@ -6,6 +6,7 @@ import {
   type AuthBlockingEvent,
 } from 'firebase-functions/v2/identity';
 import { onSchedule, type ScheduleFunction } from 'firebase-functions/v2/scheduler';
+import { onObjectFinalized, type StorageEvent } from 'firebase-functions/v2/storage';
 import { checkAllowlist } from './auth/beforeUserCreated.js';
 import { handleGenerateIosShortcutBearer } from './http/generateIosShortcutBearer.js';
 import { handleIngestLocation } from './http/ingestLocation.js';
@@ -13,6 +14,7 @@ import { handleSetSlackToken } from './http/setSlackToken.js';
 import { handleSyncNow } from './http/syncNow.js';
 import { handleTestRule } from './http/testRule.js';
 import { handleSyncAvatar } from './scheduled/syncAvatar.js';
+import { handleCanonicalUploaded } from './storage/onCanonicalUploaded.js';
 
 initializeApp();
 
@@ -51,4 +53,8 @@ export const syncAvatar: ScheduleFunction = onSchedule(
   async () => {
     await handleSyncAvatar(tokenEncryptionKey.value());
   },
+);
+
+export const processAvatarUpload = onObjectFinalized((event: StorageEvent) =>
+  handleCanonicalUploaded(event),
 );

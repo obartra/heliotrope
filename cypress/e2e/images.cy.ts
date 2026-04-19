@@ -113,6 +113,10 @@ describe('Image Library', () => {
         });
       });
 
+      // Wait for the preview to appear, then confirm the upload
+      cy.get('[data-testid="image-preview"]', { timeout: 10000 }).should('be.visible');
+      cy.get('[data-testid="image-preview"]').contains('button', 'Upload').click();
+
       cy.contains('test-avatar', { timeout: 15000 }).should('be.visible');
     });
   });

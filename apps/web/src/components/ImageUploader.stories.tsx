@@ -28,11 +28,47 @@ export const ValidationError: Story = {
   },
 };
 
-export const Warning: Story = {
+const placeholder =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
+
+export const WithPreview: Story = {
   args: {
-    initialWarnings: [
-      "This image exceeds Slack's 1 MB limit. It will upload to the library but may fail when Slack tries to use it.",
-      'This image is not square. Slack may crop it unexpectedly.',
-    ],
+    initialPreviewUrl: placeholder,
+    initialProcessedInfo: {
+      originalWidth: 512,
+      originalHeight: 512,
+      processedWidth: 512,
+      processedHeight: 512,
+      wasResized: false,
+      wasCropped: false,
+    },
+  },
+};
+
+export const ResizedPreview: Story = {
+  args: {
+    initialPreviewUrl: placeholder,
+    initialProcessedInfo: {
+      originalWidth: 3000,
+      originalHeight: 3000,
+      processedWidth: 1024,
+      processedHeight: 1024,
+      wasResized: true,
+      wasCropped: false,
+    },
+  },
+};
+
+export const CroppedAndResizedPreview: Story = {
+  args: {
+    initialPreviewUrl: placeholder,
+    initialProcessedInfo: {
+      originalWidth: 4000,
+      originalHeight: 2000,
+      processedWidth: 1024,
+      processedHeight: 1024,
+      wasResized: true,
+      wasCropped: true,
+    },
   },
 };

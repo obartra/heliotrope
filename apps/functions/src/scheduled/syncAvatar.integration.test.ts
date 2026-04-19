@@ -249,4 +249,85 @@ describe.skipIf(!emulatorRunning)('syncAvatar (emulator)', () => {
     const decisions = await db.collection(`users/${UID}/decisions`).get();
     expect(decisions.empty).toBe(true);
   });
+
+  it('uses the Slack variant when available', async () => {
+    await seedFullUser();
+
+    // Seed an image document with a Slack variant
+    const db = getFirestore();
+    await db.doc(`users/${UID}/images/${IMAGE_ID}`).set({
+      id: IMAGE_ID,
+      filename: 'test.png',
+      displayName: 'Test',
+      storagePath: `users/${UID}/avatars/${IMAGE_ID}.png`,
+      contentType: 'image/png',
+      bytes: 1000,
+      width: 1024,
+      height: 1024,
+      tags: [],
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      variants: {
+        slack: {
+          storagePath: `users/${UID}/avatars/${IMAGE_ID}_slack.jpg`,
+          contentType: 'image/jpeg',
+          width: 512,
+          height: 512,
+          bytes: 500,
+        },
+      },
+    });
+
+    let uploadedContentType = '';
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input, init) => {
+      const url = String(input);
+      if (url.includes('api.open-meteo.com/v1/forecast')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              current: { temperature_2m: 25, precipitation: 0, snowfall: 0, weather_code: 0 },
+            }),
+        } as Response);
+      }
+      if (url.includes('geocoding-api.open-meteo.com')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              results: [
+                {
+                  name: 'TestCity',
+                  latitude: 40.71,
+                  longitude: -74.01,
+                  population: 100000,
+                  country_code: 'US',
+                },
+              ],
+            }),
+        } as Response);
+      }
+      if (url.includes('slack.com/api/users.setPhoto')) {
+        // Capture the content type from the FormData body
+        const body = init?.body;
+        if (body instanceof FormData) {
+          const imageFile = body.get('image');
+          if (imageFile instanceof Blob) {
+            uploadedContentType = imageFile.type;
+          }
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ ok: true }),
+        } as Response);
+      }
+      return Promise.resolve({ ok: false } as Response);
+    });
+
+    await handleSyncAvatar(TEST_ENCRYPTION_KEY);
+
+    // The upload should have used the variant content type
+    expect(uploadedContentType).toBe('image/jpeg');
+  });
 });
