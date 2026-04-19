@@ -2,6 +2,7 @@ node_modules
 dist
 build
 .env*
+*.secret.local
 *serviceAccount*.json
 seed/rules.seed.json
 /admin/.credentials/
