@@ -3,7 +3,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { HttpsError } from 'firebase-functions/v2/https';
 
 export async function requireAuthedUser(req: {
-  headers: { authorization?: string };
+  headers: { authorization?: string | undefined };
 }): Promise<{ uid: string; email: string }> {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) {
