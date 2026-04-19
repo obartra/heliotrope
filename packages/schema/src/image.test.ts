@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ImageSchema } from './image.js';
+import { ImageSchema, ImageVariantSchema } from './image.js';
 
 function omit(obj: Record<string, unknown>, key: string): Record<string, unknown> {
   return Object.fromEntries(Object.entries(obj).filter(([k]) => k !== key));
@@ -84,5 +84,79 @@ describe('ImageSchema', () => {
 
   it('rejects non-string tags', () => {
     expect(() => ImageSchema.parse({ ...validImage, tags: [123] })).toThrow();
+  });
+
+  it('parses an image document without variants', () => {
+    const result = ImageSchema.parse(validImage);
+    expect(result.variants).toBeUndefined();
+  });
+
+  it('parses an image document with a variants map', () => {
+    const withVariants = {
+      ...validImage,
+      variants: {
+        slack: {
+          storagePath: 'users/abc/avatars/550e8400_slack.jpg',
+          contentType: 'image/jpeg',
+          width: 512,
+          height: 512,
+          bytes: 50000,
+        },
+      },
+    };
+    const result = ImageSchema.parse(withVariants);
+    expect(result.variants?.slack?.width).toBe(512);
+  });
+
+  it('accepts an empty variants map', () => {
+    expect(ImageSchema.parse({ ...validImage, variants: {} })).toBeTruthy();
+  });
+});
+
+describe('ImageVariantSchema', () => {
+  it('parses a valid variant', () => {
+    const variant = {
+      storagePath: 'users/abc/avatars/id_slack.jpg',
+      contentType: 'image/jpeg',
+      width: 512,
+      height: 512,
+      bytes: 50000,
+    };
+    expect(ImageVariantSchema.parse(variant)).toEqual(variant);
+  });
+
+  it('rejects variant with zero width', () => {
+    expect(() =>
+      ImageVariantSchema.parse({
+        storagePath: 'x',
+        contentType: 'image/jpeg',
+        width: 0,
+        height: 512,
+        bytes: 50000,
+      }),
+    ).toThrow();
+  });
+
+  it('rejects variant with negative bytes', () => {
+    expect(() =>
+      ImageVariantSchema.parse({
+        storagePath: 'x',
+        contentType: 'image/jpeg',
+        width: 512,
+        height: 512,
+        bytes: -1,
+      }),
+    ).toThrow();
+  });
+
+  it('rejects variant with missing storagePath', () => {
+    expect(() =>
+      ImageVariantSchema.parse({
+        contentType: 'image/jpeg',
+        width: 512,
+        height: 512,
+        bytes: 50000,
+      }),
+    ).toThrow();
   });
 });

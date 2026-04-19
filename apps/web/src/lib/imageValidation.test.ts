@@ -1,102 +1,81 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatFileSize,
-  MAX_DIMENSION,
   MAX_FILE_SIZE,
   MIN_DIMENSION,
-  SLACK_SIZE_LIMIT,
-  validateImageFile,
+  validateOriginalImage,
+  validateProcessedImage,
 } from './imageValidation';
 
-const square512 = { width: 512, height: 512 };
-
-describe('validateImageFile', () => {
-  it('accepts a valid PNG under 1 MB', () => {
-    const result = validateImageFile({ type: 'image/png', size: 500_000 }, square512);
+describe('validateOriginalImage', () => {
+  it('accepts a valid PNG', () => {
+    const result = validateOriginalImage({ type: 'image/png' }, { width: 512, height: 512 });
     expect(result.valid).toBe(true);
     expect(result.errors).toHaveLength(0);
-    expect(result.warnings).toHaveLength(0);
   });
 
-  it('accepts a valid JPEG under 1 MB', () => {
-    const result = validateImageFile({ type: 'image/jpeg', size: 500_000 }, square512);
+  it('accepts a valid JPEG', () => {
+    const result = validateOriginalImage({ type: 'image/jpeg' }, { width: 512, height: 512 });
     expect(result.valid).toBe(true);
-    expect(result.errors).toHaveLength(0);
   });
 
   it('rejects unsupported file type', () => {
-    const result = validateImageFile({ type: 'image/gif', size: 500_000 }, square512);
+    const result = validateOriginalImage({ type: 'image/gif' }, { width: 512, height: 512 });
     expect(result.valid).toBe(false);
     expect(result.errors).toContain('File must be PNG or JPEG.');
   });
 
-  it('rejects files over 2 MB', () => {
-    const result = validateImageFile({ type: 'image/png', size: MAX_FILE_SIZE + 1 }, square512);
-    expect(result.valid).toBe(false);
-    expect(result.errors[0]).toMatch(/2 MB/);
-  });
-
-  it('warns for files over 1 MB but under 2 MB', () => {
-    const result = validateImageFile({ type: 'image/png', size: SLACK_SIZE_LIMIT + 1 }, square512);
-    expect(result.valid).toBe(true);
-    expect(result.warnings[0]).toMatch(/Slack's 1 MB limit/);
-  });
-
   it('rejects dimensions below minimum', () => {
-    const result = validateImageFile({ type: 'image/png', size: 1000 }, { width: 64, height: 64 });
+    const result = validateOriginalImage({ type: 'image/png' }, { width: 64, height: 64 });
     expect(result.valid).toBe(false);
     expect(result.errors[0]).toMatch(new RegExp(`${MIN_DIMENSION}x${MIN_DIMENSION}`));
   });
 
-  it('rejects dimensions above maximum', () => {
-    const result = validateImageFile(
-      { type: 'image/png', size: 1000 },
-      { width: 2048, height: 2048 },
-    );
-    expect(result.valid).toBe(false);
-    expect(result.errors[0]).toMatch(new RegExp(`${MAX_DIMENSION}x${MAX_DIMENSION}`));
-  });
-
   it('rejects when only width is below minimum', () => {
-    const result = validateImageFile({ type: 'image/png', size: 1000 }, { width: 64, height: 256 });
+    const result = validateOriginalImage({ type: 'image/png' }, { width: 64, height: 256 });
     expect(result.valid).toBe(false);
-    expect(result.errors).toHaveLength(1);
-    expect(result.warnings).toContain('This image is not square. Slack may crop it unexpectedly.');
   });
 
-  it('warns for non-square images within valid range', () => {
-    const result = validateImageFile(
-      { type: 'image/png', size: 500_000 },
-      { width: 512, height: 256 },
-    );
+  it('accepts large images (auto-resize handles them)', () => {
+    const result = validateOriginalImage({ type: 'image/png' }, { width: 4000, height: 3000 });
     expect(result.valid).toBe(true);
-    expect(result.warnings).toContain('This image is not square. Slack may crop it unexpectedly.');
   });
 
-  it('collects multiple errors', () => {
-    const result = validateImageFile(
-      { type: 'image/bmp', size: MAX_FILE_SIZE + 1 },
-      { width: 10, height: 10 },
-    );
-    expect(result.valid).toBe(false);
-    expect(result.errors.length).toBeGreaterThanOrEqual(3);
-  });
-
-  it('accepts exact boundary values', () => {
-    const result = validateImageFile(
-      { type: 'image/png', size: MAX_FILE_SIZE },
-      { width: MAX_DIMENSION, height: MAX_DIMENSION },
-    );
+  it('accepts non-square images (auto-crop handles them)', () => {
+    const result = validateOriginalImage({ type: 'image/png' }, { width: 800, height: 400 });
     expect(result.valid).toBe(true);
-    expect(result.errors).toHaveLength(0);
   });
 
   it('accepts minimum dimension boundary', () => {
-    const result = validateImageFile(
-      { type: 'image/png', size: 1000 },
+    const result = validateOriginalImage(
+      { type: 'image/png' },
       { width: MIN_DIMENSION, height: MIN_DIMENSION },
     );
     expect(result.valid).toBe(true);
+  });
+
+  it('collects multiple errors', () => {
+    const result = validateOriginalImage({ type: 'image/bmp' }, { width: 10, height: 10 });
+    expect(result.valid).toBe(false);
+    expect(result.errors.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('validateProcessedImage', () => {
+  it('accepts a blob under 2 MB', () => {
+    const result = validateProcessedImage({ size: 500_000 });
+    expect(result.valid).toBe(true);
+  });
+
+  it('accepts a blob at exactly 2 MB', () => {
+    const result = validateProcessedImage({ size: MAX_FILE_SIZE });
+    expect(result.valid).toBe(true);
+  });
+
+  it('rejects a blob over 2 MB', () => {
+    const result = validateProcessedImage({ size: MAX_FILE_SIZE + 1 });
+    expect(result.valid).toBe(false);
+    expect(result.errors[0]).toMatch(/2 MB/);
   });
 });
 

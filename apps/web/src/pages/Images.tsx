@@ -14,7 +14,7 @@ export interface ImagesViewProps {
   loading: boolean;
   error: string | null;
   onUpload: (
-    file: File,
+    blob: Blob,
     imageId: string,
     displayName: string,
     dimensions: { width: number; height: number },
@@ -27,7 +27,7 @@ export interface ImagesViewProps {
   onUpdateTags: (imageId: string, tags: string[]) => Promise<void>;
   onReplace: (
     imageId: string,
-    file: File,
+    blob: Blob,
     dimensions: { width: number; height: number },
     onProgress: (progress: number) => void,
   ) => Promise<void>;
@@ -135,8 +135,8 @@ export function ImagesView({
                 allTags={allTags}
                 onRename={(name) => void onRename(img.data.id, name)}
                 onDelete={() => void handleDeleteClick(img)}
-                onReplace={(file, dims, onProgress) =>
-                  onReplace(img.data.id, file, dims, onProgress)
+                onReplace={(blob, dims, onProgress) =>
+                  onReplace(img.data.id, blob, dims, onProgress)
                 }
                 onTagsChange={(tags) => void onUpdateTags(img.data.id, tags)}
               />

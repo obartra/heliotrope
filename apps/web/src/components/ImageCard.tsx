@@ -1,5 +1,11 @@
 import { type ChangeEvent, useRef, useState } from 'react';
-import { formatFileSize, readImageDimensions, validateImageFile } from '../lib/imageValidation';
+import { processImage } from '../lib/imageProcessing';
+import {
+  formatFileSize,
+  readImageDimensions,
+  validateOriginalImage,
+  validateProcessedImage,
+} from '../lib/imageValidation';
 import type { ImageWithUrl } from '../lib/useImages';
 import { TagEditor } from './TagEditor';
 import { Button } from '@/components/ui/button';
@@ -13,7 +19,7 @@ interface ImageCardProps {
   onRename: (displayName: string) => void;
   onDelete: () => void;
   onReplace: (
-    file: File,
+    blob: Blob,
     dimensions: { width: number; height: number },
     onProgress: (progress: number) => void,
   ) => Promise<void>;
@@ -58,9 +64,23 @@ export function ImageCard({
       return;
     }
 
-    const result = validateImageFile(file, dimensions);
-    if (!result.valid) {
-      setReplaceError(result.errors.join(' '));
+    const originalResult = validateOriginalImage(file, dimensions);
+    if (!originalResult.valid) {
+      setReplaceError(originalResult.errors.join(' '));
+      return;
+    }
+
+    let processed;
+    try {
+      processed = await processImage(file);
+    } catch {
+      setReplaceError('Failed to process image.');
+      return;
+    }
+
+    const processedResult = validateProcessedImage(processed.blob);
+    if (!processedResult.valid) {
+      setReplaceError(processedResult.errors.join(' '));
       return;
     }
 
@@ -68,7 +88,11 @@ export function ImageCard({
     setReplaceProgress(0);
 
     try {
-      await onReplace(file, dimensions, setReplaceProgress);
+      await onReplace(
+        processed.blob,
+        { width: processed.width, height: processed.height },
+        setReplaceProgress,
+      );
     } catch (err) {
       setReplaceError(err instanceof Error ? err.message : 'Replace failed.');
     } finally {
