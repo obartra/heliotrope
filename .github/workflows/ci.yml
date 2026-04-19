@@ -30,6 +30,7 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @heliotrope/schema build
       - run: npx firebase emulators:exec "pnpm test" --only firestore,storage
 
   build:
