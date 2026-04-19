@@ -1,6 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/AuthContext';
 import { Dashboard } from './pages/Dashboard';
+import { Images } from './pages/Images';
+import { RuleEditor } from './pages/RuleEditor';
+import { Rules } from './pages/Rules';
 import { SignIn } from './pages/SignIn';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -34,6 +37,30 @@ export function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/images"
+          element={
+            <ProtectedRoute>
+              <Images />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rules"
+          element={
+            <ProtectedRoute>
+              <Rules />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rules/:id"
+          element={
+            <ProtectedRoute>
+              <RuleEditor />
             </ProtectedRoute>
           }
         />

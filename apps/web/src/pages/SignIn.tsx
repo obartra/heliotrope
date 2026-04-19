@@ -1,6 +1,10 @@
 import { type FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signIn, signUp } from '../lib/auth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 function errorMessage(error: unknown): string {
   if (!(error instanceof Error)) return 'Something went wrong. Try again.';
@@ -54,88 +58,68 @@ export function SignIn() {
   }
 
   return (
-    <div style={{ maxWidth: 360, margin: '80px auto', padding: '0 16px' }}>
-      <h1>{mode === 'signin' ? 'Sign in' : 'Sign up'}</h1>
-      <form onSubmit={(e) => void handleSubmit(e)}>
-        <div style={{ marginBottom: 12 }}>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: 4 }}>
-            Email
-          </label>
-          <input
+    <div className="mx-auto max-w-sm px-4 pt-20">
+      <h1 className="text-2xl font-bold mb-6">{mode === 'signin' ? 'Sign in' : 'Sign up'}</h1>
+      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
             id="email"
             type="email"
             required
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={{ width: '100%', padding: 8, boxSizing: 'border-box' }}
           />
         </div>
-        <div style={{ marginBottom: 12 }}>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: 4 }}>
-            Password
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
             id="password"
             type="password"
             required
             autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ width: '100%', padding: 8, boxSizing: 'border-box' }}
           />
         </div>
         {error && (
-          <p role="alert" style={{ color: 'crimson', margin: '0 0 12px' }}>
-            {error}
-          </p>
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
-        <button type="submit" disabled={loading} style={{ width: '100%', padding: 10 }}>
+        <Button type="submit" disabled={loading} className="w-full">
           {loading ? 'Loading...' : mode === 'signin' ? 'Sign in' : 'Sign up'}
-        </button>
+        </Button>
       </form>
-      <p style={{ marginTop: 16, textAlign: 'center' }}>
+      <p className="mt-4 text-center text-sm text-muted-foreground">
         {mode === 'signin' ? (
           <>
             No account?{' '}
-            <button
-              type="button"
+            <Button
+              variant="link"
+              className="p-0 h-auto"
               onClick={() => {
                 setMode('signup');
                 setError(null);
               }}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'royalblue',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                padding: 0,
-              }}
             >
               Sign up
-            </button>
+            </Button>
           </>
         ) : (
           <>
             Have an account?{' '}
-            <button
-              type="button"
+            <Button
+              variant="link"
+              className="p-0 h-auto"
               onClick={() => {
                 setMode('signin');
                 setError(null);
               }}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'royalblue',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                padding: 0,
-              }}
             >
               Sign in
-            </button>
+            </Button>
           </>
         )}
       </p>

@@ -10,30 +10,44 @@ The name refers to the flower that turns to face the sun. This one turns to face
 
 - Node 20+
 - pnpm 9+
+- Java 11+ (required by Firebase Emulator Suite)
 - Firebase CLI (`npm install -g firebase-tools`)
+- [direnv](https://direnv.net/) (optional, auto-loads `.envrc`)
 - A Firebase project with Firestore, Auth, and Storage enabled
+
+Run `make doctor` to verify your setup.
 
 ## Local development
 
 ```bash
 pnpm install
-pnpm dev          # Vite dev server
-pnpm emulators    # Firebase Emulator Suite
+direnv allow          # one-time: loads env vars from .envrc
+
+make dev              # start emulators + Vite dev server (background)
+make dev-stop         # tear everything down
 ```
+
+The dev server runs at http://localhost:5173 and the emulator UI at http://localhost:4000.
 
 ## Commands
 
-| Command                | Description                                  |
-| ---------------------- | -------------------------------------------- |
-| `pnpm dev`             | Start the Vite dev server                    |
-| `pnpm test`            | Run unit, rules, and integration tests       |
-| `pnpm lint`            | Lint all packages                            |
-| `pnpm typecheck`       | TypeScript type checking across the monorepo |
-| `pnpm build`           | Production build for each app                |
-| `pnpm emulators`       | Start Firebase Emulator Suite                |
-| `pnpm storybook`       | Start Storybook dev server                   |
-| `pnpm storybook:build` | Build Storybook for Chromatic                |
-| `pnpm cypress`         | Run Cypress E2E tests                        |
+| Command                | Description                                    |
+| ---------------------- | ---------------------------------------------- |
+| `make dev`             | Start emulators + Vite dev server (background) |
+| `make dev-stop`        | Stop background dev processes                  |
+| `make cypress`         | Run Cypress E2E (starts services if needed)    |
+| `make cypress-open`    | Open Cypress interactive runner                |
+| `make check`           | typecheck + lint + test + build                |
+| `make doctor`          | Check prerequisites and environment            |
+| `pnpm dev`             | Start Vite dev server only                     |
+| `pnpm test`            | Run unit, rules, and integration tests         |
+| `pnpm lint`            | Lint all packages                              |
+| `pnpm typecheck`       | TypeScript type checking across the monorepo   |
+| `pnpm build`           | Production build for each app                  |
+| `pnpm emulators`       | Start Firebase Emulator Suite only             |
+| `pnpm storybook`       | Start Storybook dev server                     |
+| `pnpm storybook:build` | Build Storybook for Chromatic                  |
+| `pnpm cypress`         | Run Cypress E2E tests (requires services)      |
 
 ## Project structure
 

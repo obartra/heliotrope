@@ -16,17 +16,22 @@ Heliotrope is a personal tool that automatically updates a Slack profile photo b
 
 ## Commands
 
-| Command                | Description                                  |
-| ---------------------- | -------------------------------------------- |
-| `pnpm dev`             | Start local dev server                       |
-| `pnpm test`            | Run unit, rules, and integration tests       |
-| `pnpm lint`            | Lint all packages                            |
-| `pnpm typecheck`       | TypeScript type checking across the monorepo |
-| `pnpm build`           | Build all apps                               |
-| `pnpm emulators`       | Start Firebase Emulator Suite                |
-| `pnpm storybook`       | Start Storybook dev server                   |
-| `pnpm storybook:build` | Build Storybook for Chromatic                |
-| `pnpm cypress`         | Run Cypress E2E tests                        |
+| Command                | Description                                    |
+| ---------------------- | ---------------------------------------------- |
+| `make dev`             | Start emulators + Vite dev server (background) |
+| `make dev-stop`        | Stop background dev processes                  |
+| `make cypress`         | Run Cypress E2E (starts services if needed)    |
+| `make cypress-open`    | Open Cypress interactive runner                |
+| `make check`           | typecheck + lint + test + build                |
+| `pnpm dev`             | Start local dev server                         |
+| `pnpm test`            | Run unit, rules, and integration tests         |
+| `pnpm lint`            | Lint all packages                              |
+| `pnpm typecheck`       | TypeScript type checking across the monorepo   |
+| `pnpm build`           | Build all apps                                 |
+| `pnpm emulators`       | Start Firebase Emulator Suite                  |
+| `pnpm storybook`       | Start Storybook dev server                     |
+| `pnpm storybook:build` | Build Storybook for Chromatic                  |
+| `pnpm cypress`         | Run Cypress E2E tests                          |
 
 ## File organization
 
