@@ -36,7 +36,7 @@ Heliotrope is a personal tool that automatically updates a Slack profile photo b
 ## File organization
 
 - **New condition type**: add matcher in `apps/functions/src/resolver/conditions/`, editor component in `apps/web/src/components/ConditionEditor/`, a colocated test file, and a colocated story file.
-- **New Cloud Function**: add handler in `apps/functions/src/http/` or `apps/functions/src/scheduled/`, export from `apps/functions/src/index.ts`, add a colocated test file.
+- **New Cloud Function**: add handler in `apps/functions/src/http/` or `apps/functions/src/scheduled/`, export from `apps/functions/src/index.ts`, add a colocated `*.integration.test.ts` file.
 - **New page**: add in `apps/web/src/pages/`, add a colocated `*.stories.tsx` file.
 - **New Zod schema**: add in `packages/schema/src/`, export from the package.
 - **Custom ESLint rules**: add in `tooling/eslint-plugin-heliotrope/`.

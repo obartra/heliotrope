@@ -167,7 +167,7 @@ A shared function `assembleSignals(uid)` reads the user's latest location and ca
 
 ### File layout
 
-The file layout follows the repository structure defined in the architecture doc (000). Each handler has a colocated `*.test.ts` file. Signal providers live under `apps/functions/src/signals/` with colocated tests.
+The file layout follows the repository structure defined in the architecture doc (000). Each handler has a colocated `*.integration.test.ts` file for emulator-based integration tests. Signal providers live under `apps/functions/src/signals/` with colocated `*.test.ts` unit tests.
 
 ## Alternatives considered
 
@@ -211,8 +211,8 @@ The file layout follows the repository structure defined in the architecture doc
 - Sunrise/sunset signal provider computes correct values using `suncalc`.
 - All signal providers return `null` gracefully on API failure, and condition matchers handle `null` signals by returning `matched: false` with an appropriate explanation.
 - Bearer token comparison in `ingestLocation` uses constant-time comparison (`crypto.timingSafeEqual`).
-- Emulator integration tests cover: valid and invalid bearer for `ingestLocation`, collection trimming to 500, `syncNow` returns a trace, `testRule` returns per-condition explanations.
+- Emulator integration tests cover all cases defined in design doc 009, section 3 (Integration tests): `ingestLocation` (9 cases), `syncNow` (7 cases), `testRule` (9 cases), and `assembleSignals` (5 cases).
 - `syncAvatar` cron logic is tested by invoking the handler manually with a mocked scheduler context.
-- All external API calls (Open-Meteo, Slack) are mocked with `msw` in tests. No real external calls in CI.
+- All external API calls (Open-Meteo, Slack) are mocked via `vi.spyOn(globalThis, 'fetch')` in tests. No real external calls in CI.
 - `pnpm typecheck` and `pnpm lint` pass.
 - `pnpm test` passes with all new tests included.

@@ -15,6 +15,12 @@ const emulatorRunning = await fetch(`http://localhost:${FIRESTORE_PORT}`).then(
   () => false,
 );
 
+if (!emulatorRunning && process.env.CI) {
+  throw new Error(
+    'Firestore emulator is not running but CI=true. Rules tests must not be silently skipped in CI.',
+  );
+}
+
 const PROJECT_ID = 'heliotrope-rules-test';
 const OWNER_UID = 'owner-abc';
 const OTHER_UID = 'other-xyz';
