@@ -10,7 +10,7 @@ const firebaseConfig: Record<string, string> = {
   authDomain: (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string) ?? 'localhost',
   projectId,
   storageBucket:
-    (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string) ?? `${projectId}.appspot.com`,
+    (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string) ?? `${projectId}.firebasestorage.app`,
 };
 
 const app = initializeApp(firebaseConfig);
