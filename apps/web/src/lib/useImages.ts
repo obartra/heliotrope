@@ -4,7 +4,9 @@ import {
   Timestamp,
   collection,
   deleteDoc,
+  deleteField,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   query,
@@ -28,7 +30,7 @@ interface UseImagesReturn {
   loading: boolean;
   error: string | null;
   uploadImage: (
-    file: File,
+    blob: Blob,
     imageId: string,
     displayName: string,
     dimensions: { width: number; height: number },
@@ -41,7 +43,7 @@ interface UseImagesReturn {
   updateTags: (imageId: string, tags: string[]) => Promise<void>;
   replaceImage: (
     imageId: string,
-    file: File,
+    blob: Blob,
     dimensions: { width: number; height: number },
     onProgress?: (progress: number) => void,
   ) => Promise<void>;
@@ -102,7 +104,7 @@ export function useImages(): UseImagesReturn {
 
   const uploadImage = useCallback(
     async (
-      file: File,
+      blob: Blob,
       imageId: string,
       displayName: string,
       dimensions: { width: number; height: number },
@@ -112,7 +114,7 @@ export function useImages(): UseImagesReturn {
 
       const storagePath = `users/${user.uid}/avatars/${imageId}.png`;
       const storageRef = ref(storage, storagePath);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      const uploadTask = uploadBytesResumable(storageRef, blob);
 
       return new Promise<void>((resolve, reject) => {
         uploadTask.on(
@@ -126,11 +128,11 @@ export function useImages(): UseImagesReturn {
             const now = Timestamp.now();
             const imageDoc: Image = {
               id: imageId,
-              filename: file.name,
+              filename: `${displayName}.png`,
               displayName,
               storagePath,
-              contentType: file.type,
-              bytes: file.size,
+              contentType: 'image/png',
+              bytes: blob.size,
               width: dimensions.width,
               height: dimensions.height,
               tags: [],
@@ -152,10 +154,27 @@ export function useImages(): UseImagesReturn {
     async (imageId: string): Promise<void> => {
       if (!user) throw new Error('Not authenticated');
 
-      const storagePath = `users/${user.uid}/avatars/${imageId}.png`;
-      const storageRef = ref(storage, storagePath);
-      await deleteObject(storageRef);
-      await deleteDoc(doc(db, 'users', user.uid, 'images', imageId));
+      // Read image doc to get variant paths before deleting
+      const imageDocRef = doc(db, 'users', user.uid, 'images', imageId);
+      const imageSnap = await getDoc(imageDocRef);
+      const imageData = imageSnap.data() as Image | undefined;
+
+      // Delete canonical file
+      const canonicalPath = `users/${user.uid}/avatars/${imageId}.png`;
+      await deleteObject(ref(storage, canonicalPath));
+
+      // Delete variant files
+      if (imageData?.variants) {
+        await Promise.all(
+          Object.values(imageData.variants).map((variant) =>
+            deleteObject(ref(storage, variant.storagePath)).catch(() => {
+              // Variant may not exist if trigger has not run yet
+            }),
+          ),
+        );
+      }
+
+      await deleteDoc(imageDocRef);
     },
     [user],
   );
@@ -237,7 +256,7 @@ export function useImages(): UseImagesReturn {
   const replaceImage = useCallback(
     async (
       imageId: string,
-      file: File,
+      blob: Blob,
       dimensions: { width: number; height: number },
       onProgress?: (progress: number) => void,
     ): Promise<void> => {
@@ -245,7 +264,7 @@ export function useImages(): UseImagesReturn {
 
       const storagePath = `users/${user.uid}/avatars/${imageId}.png`;
       const storageRef = ref(storage, storagePath);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      const uploadTask = uploadBytesResumable(storageRef, blob);
 
       return new Promise<void>((resolve, reject) => {
         uploadTask.on(
@@ -257,12 +276,12 @@ export function useImages(): UseImagesReturn {
           reject,
           () => {
             void updateDoc(doc(db, 'users', user.uid, 'images', imageId), {
-              bytes: file.size,
+              bytes: blob.size,
               width: dimensions.width,
               height: dimensions.height,
-              contentType: file.type,
-              filename: file.name,
+              contentType: 'image/png',
               updatedAt: Timestamp.now(),
+              variants: deleteField(),
             }).then(resolve, reject);
           },
         );

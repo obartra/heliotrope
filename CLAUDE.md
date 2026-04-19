@@ -79,3 +79,4 @@ Heliotrope is a personal tool that automatically updates a Slack profile photo b
 - [009 - Testing Strategy](docs/design/009-testing-strategy.md)
 - [010 - Deployment](docs/design/010-deployment.md)
 - [011 - Settings UI](docs/design/011-settings-ui.md)
+- [012 - Image Optimization](docs/design/012-image-optimization.md)

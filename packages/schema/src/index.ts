@@ -27,7 +27,7 @@ export {
   type NearCityCondition,
 } from './condition.js';
 
-export { ImageSchema, type Image } from './image.js';
+export { ImageSchema, ImageVariantSchema, type Image, type ImageVariant } from './image.js';
 
 export { RuleSchema, type Rule } from './rule.js';
 
