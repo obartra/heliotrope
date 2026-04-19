@@ -30,7 +30,75 @@ Tests run against the Firebase Emulator. Every subcollection under `users/{uid}/
 
 #### 3. Integration tests (Firebase Emulator Suite)
 
-Cloud Function handlers tested with real Firestore but mocked external APIs (`msw`). Covers `ingestLocation` (valid/invalid bearer, trimming), `syncNow` (full pipeline, returns trace), `syncAvatar` (manual invocation, hash dedup, rate limiting), and `testRule` (per-condition results, no writes).
+Cloud Function handlers tested with real Firestore but mocked external APIs (Open-Meteo weather and geocoding via `vi.spyOn(globalThis, 'fetch')`). Each handler file has a colocated `*.integration.test.ts` that runs against the Firestore Emulator on port 8080. Tests follow the same `describe.skipIf(!emulatorRunning)` pattern used by the rules tests.
+
+##### `ingestLocation.integration.test.ts`
+
+Setup: seed `users/{uid}/secrets/iosShortcutBearer` with a known `bearerHash`.
+
+| #   | Test case                          | Assert                                                       |
+| --- | ---------------------------------- | ------------------------------------------------------------ |
+| 1   | Valid bearer, valid body           | 204, location doc written with correct lat/lon/timestamp     |
+| 2   | Missing Authorization header       | throws `unauthenticated`                                     |
+| 3   | Malformed bearer (no colon)        | throws `unauthenticated`                                     |
+| 4   | Wrong secret (hash mismatch)       | throws `unauthenticated`                                     |
+| 5   | Non-existent UID                   | throws `unauthenticated`                                     |
+| 6   | Non-POST method                    | throws `invalid-argument`                                    |
+| 7   | Invalid body (lat out of range)    | throws `invalid-argument`                                    |
+| 8   | Collection trimming                | seed 501 location docs, call handler, verify only 500 remain |
+| 9   | Updates `lastUsedAt` on bearer doc | verify field updated after successful call                   |
+
+##### `syncNow.integration.test.ts`
+
+Setup: seed a user profile (`defaultImageId`), one rule with a condition that will match the mocked signals, one location doc, and mock `requireAuthedUser` to return the test UID. Mock `fetch` to return canned Open-Meteo weather and geocoding responses.
+
+| #   | Test case                             | Assert                                                               |
+| --- | ------------------------------------- | -------------------------------------------------------------------- |
+| 1   | Full pipeline, rule matches           | 200, response contains `chosenImageId`, `reason`, `trace` array      |
+| 2   | No rules, falls back to default image | `chosenImageId` equals `defaultImageId`, reason is `"default"`       |
+| 3   | No location data                      | signals.location is null, location-dependent conditions do not match |
+| 4   | Override active and not expired       | `chosenImageId` equals override imageId                              |
+| 5   | Override expired                      | override ignored, resolver evaluates rules                           |
+| 6   | Non-POST method                       | throws `invalid-argument`                                            |
+| 7   | Unauthenticated request               | throws `unauthenticated`                                             |
+
+##### `testRule.integration.test.ts`
+
+Setup: seed a user profile with timezone, one location doc, and a saved rule. Mock `requireAuthedUser` and `fetch` as above.
+
+| #   | Test case                                  | Assert                                                                 |
+| --- | ------------------------------------------ | ---------------------------------------------------------------------- |
+| 1   | Test by ruleId, all conditions match       | `allMatched: true`, per-condition `matched: true` with explanations    |
+| 2   | Test by ruleId, one condition fails        | `allMatched: false`, failed condition has `matched: false`             |
+| 3   | Test with inline rule                      | returns results without reading from Firestore                         |
+| 4   | Non-existent ruleId                        | throws `not-found`                                                     |
+| 5   | Invalid body (neither ruleId nor rule)     | throws `invalid-argument`                                              |
+| 6   | No location data                           | location-dependent conditions return `matched: false` with explanation |
+| 7   | Response includes current signals snapshot | `signals` object has location, weather, country, sunrise, sunset       |
+| 8   | Non-POST method                            | throws `invalid-argument`                                              |
+| 9   | Unauthenticated request                    | throws `unauthenticated`                                               |
+
+##### `assembleSignals.integration.test.ts`
+
+Setup: seed a location doc for the test user. Mock `fetch` to return canned Open-Meteo responses.
+
+| #   | Test case                         | Assert                                                                    |
+| --- | --------------------------------- | ------------------------------------------------------------------------- |
+| 1   | Location exists, APIs succeed     | returns full signals with weather, country, nearbyCities, sunrise, sunset |
+| 2   | No location docs                  | returns default signals (location null, equator sun times, weather null)  |
+| 3   | Weather API fails                 | weather is null, other signals still populated                            |
+| 4   | Geocoding API fails               | country and nearbyCities are null, other signals still populated          |
+| 5   | Location age calculated correctly | `ageMinutes` matches expected value based on seeded timestamp             |
+
+##### Emulator setup pattern
+
+Each integration test file:
+
+1. Checks emulator availability via `fetch('http://localhost:8080')` in a top-level `beforeAll`.
+2. Uses `describe.skipIf(!emulatorRunning)` to skip gracefully when the emulator is not running.
+3. Initializes a Firebase Admin app pointed at the emulator (`FIRESTORE_EMULATOR_HOST=localhost:8080`).
+4. Clears all Firestore data between tests via the emulator REST API (`DELETE http://localhost:8080/emulator/v1/projects/{projectId}/databases/(default)/documents`).
+5. Seeds only the documents needed for each test case in `beforeEach`.
 
 #### 4. Component tests and visual regression (Storybook + Chromatic)
 
@@ -42,7 +110,7 @@ Cypress runs against a Netlify deploy preview with the Firebase Emulator backend
 
 ### Mocking boundary
 
-`msw` mocks all external HTTP calls (Slack API, Open-Meteo forecast, Open-Meteo geocoding) in unit and integration tests. Cypress uses `cy.intercept`. No real external API calls occur in CI.
+Unit tests mock external HTTP calls using `vi.spyOn(globalThis, 'fetch')` with canned responses. Integration tests use the same approach for Open-Meteo weather and geocoding, while running Firestore operations against the real emulator. Firebase Admin Auth is mocked via `vi.mock('firebase-admin/auth')` in handler tests that use `requireAuthedUser`. Cypress uses `cy.intercept` for all external API calls. No real external API calls occur in CI.
 
 ### Coverage targets
 
@@ -96,7 +164,7 @@ Pre-commit hooks (Husky + lint-staged) run typecheck on affected packages, lint 
 
 **Separate coverage tool (Istanbul/nyc) instead of Vitest's built-in coverage.** Vitest includes built-in coverage reporting via `v8` or `istanbul` providers. Using the built-in provider avoids an additional dependency and configuration layer. The `v8` provider is used by default for speed.
 
-**`nock` instead of `msw` for HTTP mocking.** `nock` patches Node's `http` module directly, which works well for server-side code but does not extend to browser environments. `msw` intercepts at the network level and works in both Node and browser contexts, providing a consistent mocking approach across unit tests, integration tests, and Storybook stories.
+**`msw` or `nock` instead of `vi.spyOn(globalThis, 'fetch')` for HTTP mocking.** `nock` patches Node's `http` module directly, which works well for server-side code but does not extend to browser environments. `msw` intercepts at the network level and works in both Node and browser contexts. `vi.spyOn(globalThis, 'fetch')` was chosen for its simplicity: no extra dependency, no setup boilerplate, and direct control over response shapes in each test. If tests later need request matching, delayed responses, or network error simulation beyond what `vi.spyOn` provides easily, `msw` can replace it without changing test structure.
 
 ## Open questions
 
@@ -106,14 +174,14 @@ Pre-commit hooks (Husky + lint-staged) run typecheck on affected packages, lint 
 
 ## Acceptance criteria
 
-- Vitest is configured in the monorepo root (`vitest.config.ts`) and runs all `*.test.ts` files across `packages/schema`, `apps/functions`, and `apps/web`.
+- Vitest is configured in the monorepo root (`vitest.config.ts`) and runs all `*.test.ts` and `*.integration.test.ts` files across `packages/schema`, `apps/functions`, and `apps/web`.
 - `packages/schema` has 100% statement and branch coverage.
 - Every condition matcher in `apps/functions/src/resolver/conditions/` has a colocated `*.test.ts` file covering the edge cases listed in this document.
 - `apps/functions/src/resolver/index.test.ts` contains 30+ test cases covering priority, empty conditions, disabled rules, override precedence, and default fallthrough.
 - Firestore rules tests cover every subcollection path for owner, non-owner, unauthenticated, and cross-user scenarios. `decisions` and `slackState` are client-write-denied. `secrets` has no client access.
 - Storage rules tests confirm owner-only access to `users/{uid}/avatars/`.
-- Integration tests for `ingestLocation`, `syncNow`, `syncAvatar`, and `testRule` run against the Firebase Emulator Suite and pass.
-- `msw` is configured to mock Slack and Open-Meteo endpoints. No real external API calls occur during any test run.
+- Integration tests for `ingestLocation`, `syncNow`, `syncAvatar`, `testRule`, and `assembleSignals` run against the Firebase Emulator Suite and pass. Each has a colocated `*.integration.test.ts` file covering all cases listed in section 3 of this document.
+- External HTTP calls (Open-Meteo weather, Open-Meteo geocoding) are mocked via `vi.spyOn(globalThis, 'fetch')` in unit and integration tests. No real external API calls occur during any test run.
 - Every component and page in the web app has at least one Storybook story. Stories cover empty, populated, loading, and error states.
 - The Storybook a11y addon is enabled and Axe violations at the serious or critical level fail CI.
 - Chromatic is configured and runs on every PR. Merge is blocked on unreviewed visual changes.

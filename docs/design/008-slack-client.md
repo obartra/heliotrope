@@ -157,7 +157,7 @@ The architecture doc (000) discusses and rejects both storing the token as a Fun
 - Hash deduplication prevents Slack upload when `slackState.lastUploadedImageHash` matches the current image hash.
 - Application-level rate limiting prevents uploads within `minSecondsBetweenSlackUploads` of the last upload.
 - `slackState.lastUploadError` is written on Slack API failures and cleared on the next successful upload.
-- All Slack API calls are mocked with `msw` in tests. No real Slack API calls in CI.
+- All Slack API calls are mocked via `vi.spyOn(globalThis, 'fetch')` in tests. No real Slack API calls in CI.
 - Integration test: mocked Slack upload through the `syncNow` flow confirms the full pipeline from token decryption through upload and state update.
 - `pnpm typecheck` and `pnpm lint` pass.
 - `pnpm test` passes with all new tests included.

@@ -272,7 +272,7 @@ heliotrope/
   README.md
 ```
 
-Every component under `apps/web/src/components/` and every page under `apps/web/src/pages/` has a colocated `*.stories.tsx` file next to it. Every Function handler has a colocated `*.test.ts` file.
+Every component under `apps/web/src/components/` and every page under `apps/web/src/pages/` has a colocated `*.stories.tsx` file next to it. HTTP Cloud Function handlers have colocated `*.integration.test.ts` files for emulator-based integration tests. Resolver logic, condition matchers, and signal providers have colocated `*.test.ts` unit test files.
 
 ### Auth: email/password with allowlist, per-user isolation
 
@@ -725,10 +725,13 @@ Every milestone ships with the tests that cover its acceptance criteria. CI fail
 
 **Integration tests (Firebase Emulator Suite)**
 
-- `ingestLocation` writes a doc when bearer is valid, rejects invalid, trims the collection correctly.
-- `syncNow` runs the full resolver with mocked Slack upload, returns a trace.
+Cloud Function handlers are tested with real Firestore (emulator) but mocked external APIs via `vi.spyOn(globalThis, 'fetch')`. Each handler has a colocated `*.integration.test.ts` file. Full test case tables are in design doc 009, section 3. Summary:
+
+- `ingestLocation`: bearer auth (valid, invalid, missing, malformed), body validation, location writes, collection trimming, `lastUsedAt` update (9 cases).
+- `syncNow`: full resolver pipeline, default fallback, override handling, no-location fallback, auth (7 cases).
+- `testRule`: ruleId lookup, inline rule, not-found, no-location, signals snapshot, auth (9 cases).
+- `assembleSignals`: full signals, no-location fallback, individual API failure resilience (5 cases).
 - `syncAvatar` cron logic tested by invoking the handler manually with a mocked scheduler context.
-- `testRule` returns per-condition explanations.
 
 **Component tests and visual regression (Storybook + Chromatic)**
 
@@ -749,7 +752,8 @@ Every milestone ships with the tests that cover its acceptance criteria. CI fail
 
 **Mocking boundary**
 
-- `msw` is the mock library for network boundaries in unit and integration tests.
+- `vi.spyOn(globalThis, 'fetch')` mocks all external HTTP calls (Open-Meteo weather, Open-Meteo geocoding, Slack) in unit and integration tests. Firebase Admin Auth is mocked via `vi.mock('firebase-admin/auth')` for handler tests using `requireAuthedUser`.
+- Cypress uses `cy.intercept` for all external API calls.
 - No real Slack, Open-Meteo, or ipapi calls in CI, ever.
 
 **Coverage targets**
