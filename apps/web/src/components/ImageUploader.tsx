@@ -92,8 +92,11 @@ export function ImageUploader({
   }
 
   async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const fileList = e.target.files;
+    if (!fileList || fileList.length === 0) return;
+
+    // Snapshot into an array before clearPreviews resets the input
+    const files = Array.from(fileList);
 
     setErrors([]);
     clearPreviews();
