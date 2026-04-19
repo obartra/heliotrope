@@ -9,6 +9,12 @@ export const emulatorRunning = await fetch(`http://localhost:${FIRESTORE_PORT}`)
   () => false,
 );
 
+if (!emulatorRunning && process.env.CI) {
+  throw new Error(
+    'Firestore emulator is not running but CI=true. Integration tests must not be silently skipped in CI.',
+  );
+}
+
 if (emulatorRunning && getApps().length === 0) {
   process.env.FIRESTORE_EMULATOR_HOST = `localhost:${FIRESTORE_PORT}`;
   initializeApp({ projectId: PROJECT_ID });
