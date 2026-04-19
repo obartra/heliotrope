@@ -1,3 +1,4 @@
+import { Blob } from 'buffer';
 import { z } from 'zod';
 
 const SlackAuthTestResponseSchema = z.object({
@@ -63,4 +64,70 @@ export async function validateToken(token: string): Promise<SlackValidateResult>
     teamId: data.team_id,
     teamName: data.team ?? null,
   };
+}
+
+export interface UploadAvatarSuccess {
+  ok: true;
+}
+
+export interface UploadAvatarFailure {
+  ok: false;
+  error: string;
+  retryAfterSeconds?: number;
+}
+
+export type UploadAvatarResult = UploadAvatarSuccess | UploadAvatarFailure;
+
+const SlackSetPhotoResponseSchema = z.object({
+  ok: z.boolean(),
+  error: z.string().optional(),
+});
+
+export async function uploadAvatar(
+  token: string,
+  imageBytes: Buffer,
+  contentType: string,
+): Promise<UploadAvatarResult> {
+  const formData = new FormData();
+  formData.append('image', new Blob([imageBytes], { type: contentType }), 'avatar.png');
+
+  let response: Response;
+  try {
+    response = await fetch('https://slack.com/api/users.setPhoto', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+  } catch {
+    return { ok: false, error: 'network_error' };
+  }
+
+  if (response.status === 429) {
+    const retryAfter = response.headers.get('Retry-After');
+    const result: UploadAvatarFailure = { ok: false, error: 'rate_limited' };
+    if (retryAfter) {
+      result.retryAfterSeconds = parseInt(retryAfter, 10);
+    }
+    return result;
+  }
+
+  let json: unknown;
+  try {
+    json = await response.json();
+  } catch {
+    return { ok: false, error: 'unexpected_response' };
+  }
+
+  const parsed = SlackSetPhotoResponseSchema.safeParse(json);
+  if (!parsed.success) {
+    return { ok: false, error: 'unexpected_response' };
+  }
+
+  if (!parsed.data.ok) {
+    return { ok: false, error: parsed.data.error ?? 'unknown_error' };
+  }
+
+  return { ok: true };
 }

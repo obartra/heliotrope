@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -8,9 +9,20 @@ import { requireAuthedUser } from './requireAuthedUser.js';
 import { handleSyncNow } from './syncNow.js';
 
 const UID = 'test-sync';
+const TEST_ENCRYPTION_KEY = randomBytes(32).toString('base64');
 
 vi.mock('./requireAuthedUser.js', () => ({
   requireAuthedUser: vi.fn(),
+}));
+
+vi.mock('firebase-admin/storage', () => ({
+  getStorage: vi.fn(() => ({
+    bucket: vi.fn(() => ({
+      file: vi.fn(() => ({
+        download: vi.fn(() => Promise.resolve([Buffer.from([0x89, 0x50, 0x4e, 0x47])])),
+      })),
+    })),
+  })),
 }));
 
 const IMAGE_ID = '11111111-1111-1111-1111-111111111111';
@@ -139,7 +151,7 @@ describe.skipIf(!emulatorRunning)('syncNow (emulator)', () => {
     mockApis();
 
     const res = makeRes();
-    await handleSyncNow(makeReq(), res);
+    await handleSyncNow(makeReq(), res, TEST_ENCRYPTION_KEY);
 
     expect(res.statusCode).toBe(200);
     const body = res.jsonBody as SyncNowResponse;
@@ -154,7 +166,7 @@ describe.skipIf(!emulatorRunning)('syncNow (emulator)', () => {
     mockApis();
 
     const res = makeRes();
-    await handleSyncNow(makeReq(), res);
+    await handleSyncNow(makeReq(), res, TEST_ENCRYPTION_KEY);
 
     expect(res.statusCode).toBe(200);
     const body = res.jsonBody as SyncNowResponse;
@@ -167,7 +179,7 @@ describe.skipIf(!emulatorRunning)('syncNow (emulator)', () => {
     await seedRule([{ type: 'country', codes: ['US'] }]);
 
     const res = makeRes();
-    await handleSyncNow(makeReq(), res);
+    await handleSyncNow(makeReq(), res, TEST_ENCRYPTION_KEY);
 
     expect(res.statusCode).toBe(200);
     const body = res.jsonBody as SyncNowResponse;
@@ -189,7 +201,7 @@ describe.skipIf(!emulatorRunning)('syncNow (emulator)', () => {
     });
 
     const res = makeRes();
-    await handleSyncNow(makeReq(), res);
+    await handleSyncNow(makeReq(), res, TEST_ENCRYPTION_KEY);
 
     expect(res.statusCode).toBe(200);
     const body = res.jsonBody as SyncNowResponse;
@@ -212,7 +224,7 @@ describe.skipIf(!emulatorRunning)('syncNow (emulator)', () => {
     });
 
     const res = makeRes();
-    await handleSyncNow(makeReq(), res);
+    await handleSyncNow(makeReq(), res, TEST_ENCRYPTION_KEY);
 
     expect(res.statusCode).toBe(200);
     const body = res.jsonBody as SyncNowResponse;
@@ -221,7 +233,9 @@ describe.skipIf(!emulatorRunning)('syncNow (emulator)', () => {
   });
 
   it('throws for non-POST method', async () => {
-    await expect(handleSyncNow(makeReq('GET'), makeRes())).rejects.toThrow(HttpsError);
+    await expect(handleSyncNow(makeReq('GET'), makeRes(), TEST_ENCRYPTION_KEY)).rejects.toThrow(
+      HttpsError,
+    );
   });
 
   it('throws unauthenticated when requireAuthedUser rejects', async () => {
@@ -229,6 +243,8 @@ describe.skipIf(!emulatorRunning)('syncNow (emulator)', () => {
       new HttpsError('unauthenticated', 'Invalid or expired token.'),
     );
 
-    await expect(handleSyncNow(makeReq(), makeRes())).rejects.toThrow('Invalid or expired token.');
+    await expect(handleSyncNow(makeReq(), makeRes(), TEST_ENCRYPTION_KEY)).rejects.toThrow(
+      'Invalid or expired token.',
+    );
   });
 });
