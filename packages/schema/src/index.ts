@@ -36,6 +36,17 @@ export { OverrideSchema, type Override } from './override.js';
 export { LocationSchema, type Location } from './location.js';
 
 export {
+  ProfileSchema,
+  SlackConnectionSchema,
+  SchedulerSchema,
+  IosShortcutBearerInfoSchema,
+  type Profile,
+  type SlackConnection,
+  type Scheduler,
+  type IosShortcutBearerInfo,
+} from './profile.js';
+
+export {
   DecisionSchema,
   TraceEntrySchema,
   NearbyCitySchema,
