@@ -14,6 +14,9 @@ export function Dashboard() {
         <Button variant="outline" asChild>
           <Link to="/rules">Rules</Link>
         </Button>
+        <Button variant="outline" asChild>
+          <Link to="/settings">Settings</Link>
+        </Button>
       </nav>
       <Button variant="ghost" onClick={() => void signOut()}>
         Sign out

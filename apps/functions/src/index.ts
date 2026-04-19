@@ -6,13 +6,16 @@ import {
   type AuthBlockingEvent,
 } from 'firebase-functions/v2/identity';
 import { checkAllowlist } from './auth/beforeUserCreated.js';
+import { handleGenerateIosShortcutBearer } from './http/generateIosShortcutBearer.js';
 import { handleIngestLocation } from './http/ingestLocation.js';
+import { handleSetSlackToken } from './http/setSlackToken.js';
 import { handleSyncNow } from './http/syncNow.js';
 import { handleTestRule } from './http/testRule.js';
 
 initializeApp();
 
 const allowedSignupEmails = defineSecret('ALLOWED_SIGNUP_EMAILS');
+const tokenEncryptionKey = defineSecret('TOKEN_ENCRYPTION_KEY');
 
 export const beforeUserCreated: ReturnType<typeof beforeUserCreatedTrigger> =
   beforeUserCreatedTrigger({ secrets: [allowedSignupEmails] }, (event: AuthBlockingEvent) => {
@@ -29,4 +32,13 @@ export const syncNow: HttpsFunction = onRequest({ cors: true }, (req, res) =>
 
 export const testRule: HttpsFunction = onRequest({ cors: true }, (req, res) =>
   handleTestRule(req, res),
+);
+
+export const setSlackToken: HttpsFunction = onRequest(
+  { cors: true, secrets: [tokenEncryptionKey] },
+  (req, res) => handleSetSlackToken(req, res, tokenEncryptionKey.value()),
+);
+
+export const generateIosShortcutBearer: HttpsFunction = onRequest({ cors: true }, (req, res) =>
+  handleGenerateIosShortcutBearer(req, res),
 );

@@ -4,6 +4,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Images } from './pages/Images';
 import { RuleEditor } from './pages/RuleEditor';
 import { Rules } from './pages/Rules';
+import { Settings } from './pages/Settings';
 import { SignIn } from './pages/SignIn';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -61,6 +62,14 @@ export function App() {
           element={
             <ProtectedRoute>
               <RuleEditor />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />
