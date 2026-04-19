@@ -3,5 +3,6 @@
   "projectId": "",
   "autoAcceptChanges": "main",
   "onlyChanged": true,
-  "externals": ["public/**"]
+  "externals": ["public/**"],
+  "storybookBaseDir": "apps/web"
 }
